@@ -1,0 +1,145 @@
+﻿@page "/"
+@inject NarutoApiService Api
+
+<PageTitle>SearchNarutoAPI</PageTitle>
+
+<h1>🍥 SearchNarutoAPI</h1>
+
+<form class="search-bar" @onsubmit="SearchAsync" @onsubmit:preventDefault>
+    <input type="text" placeholder="Buscar personagem (ex.: Naruto, Sasuke, Sakura)"
+           @bind="_term" @bind:event="oninput" />
+    <button type="submit" disabled="@_loading">Buscar</button>
+    <button type="button" class="secondary" @onclick="ClearAsync" disabled="@_loading">Limpar</button>
+</form>
+
+@if (_loading)
+{
+    <p class="status">Carregando personagens… (a primeira chamada pode demorar alguns segundos)</p>
+}
+else if (_error is not null)
+{
+    <p class="status error">@_error</p>
+}
+else if (_data.Characters.Count == 0)
+{
+    <p class="status">Nenhum personagem encontrado.</p>
+}
+else
+{
+    <p class="status">@_data.Total personagem(ns) · página @_page de @TotalPages</p>
+
+    <div class="grid">
+        @foreach (var c in _data.Characters)
+        {
+            <article class="card">
+                @if (c.FirstImage is not null)
+                {
+                    <img src="@c.FirstImage" alt="@c.Name" loading="lazy" />
+                }
+                else
+                {
+                    <div class="no-image">Sem imagem</div>
+                }
+
+                <div class="card-body">
+                    <h2>@c.Name</h2>
+
+                    <p><strong>Clã / Afiliação:</strong> @c.ClanOrAffiliation</p>
+
+                    <p>
+                        <strong>Patente ninja:</strong>
+                        @if (c.NinjaRanks.Count == 0)
+                        {
+                            <span>Não informada</span>
+                        }
+                    </p>
+                    @if (c.NinjaRanks.Count > 0)
+                    {
+                        <ul>
+                            @foreach (var r in c.NinjaRanks)
+                            {
+                                <li>@r</li>
+                            }
+                        </ul>
+                    }
+
+                    <p>
+                        <strong>Jutsus:</strong>
+                        @if (c.Jutsu.Count == 0)
+                        {
+                            <span>Nenhum registrado</span>
+                        }
+                    </p>
+                    @if (c.Jutsu.Count > 0)
+                    {
+                        <details>
+                            <summary>Ver @c.Jutsu.Count jutsu(s)</summary>
+                            <ul>
+                                @foreach (var j in c.Jutsu)
+                                {
+                                    <li>@j</li>
+                                }
+                            </ul>
+                        </details>
+                    }
+                </div>
+            </article>
+        }
+    </div>
+
+    <nav class="pager">
+        <button @onclick="PrevAsync" disabled="@(_page <= 1)">‹ Anterior</button>
+        <span>@_page / @TotalPages</span>
+        <button @onclick="NextAsync" disabled="@(_page >= TotalPages)">Próxima ›</button>
+    </nav>
+}
+
+@code {
+    private const int PageSize = 12;
+
+    private CharactersResponse _data = new();
+    private string _term = string.Empty;
+    private string? _activeTerm;
+    private int _page = 1;
+    private bool _loading;
+    private string? _error;
+
+    private int TotalPages => Math.Max(1, (int)Math.Ceiling(_data.Total / (double)PageSize));
+
+    protected override Task OnInitializedAsync() => LoadAsync();
+
+    private Task SearchAsync()
+    {
+        _activeTerm = _term;
+        _page = 1;
+        return LoadAsync();
+    }
+
+    private Task ClearAsync()
+    {
+        _term = string.Empty;
+        return SearchAsync();
+    }
+
+    private Task PrevAsync() { _page--; return LoadAsync(); }
+    private Task NextAsync() { _page++; return LoadAsync(); }
+
+    private async Task LoadAsync()
+    {
+        _loading = true;
+        _error = null;
+        try
+        {
+            _data = await Api.GetCharactersAsync(_activeTerm, _page, PageSize);
+        }
+        catch (Exception ex)
+        {
+            _error = $"Erro ao consultar a API: {ex.Message}";
+            _data = new CharactersResponse();
+        }
+        finally
+        {
+            _loading = false;
+        }
+    }
+}
