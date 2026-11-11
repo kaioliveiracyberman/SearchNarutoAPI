@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("SearchNarutoAPI")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+2f191b1a34093a2cb8cb7aae28c1f5ad165ed421")]
 [assembly: System.Reflection.AssemblyProductAttribute("SearchNarutoAPI")]
 [assembly: System.Reflection.AssemblyTitleAttribute("SearchNarutoAPI")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
